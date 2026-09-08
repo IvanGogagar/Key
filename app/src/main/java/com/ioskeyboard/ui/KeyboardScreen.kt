@@ -1,6 +1,5 @@
 package com.ioskeyboard.ui
 
-import android.os.Build
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
@@ -10,13 +9,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import com.ioskeyboard.model.LayoutProvider
+import com.ioskeyboard.model.LayoutType
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -28,7 +28,7 @@ fun KeyboardScreen(
     val suggestions by viewModel.suggestions.collectAsState()
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
-    val layout = viewModel.keyboardLayout
+    val keyboardLayout = LayoutProvider.getLayout(currentLayout)
 
     Box(
         modifier = modifier
@@ -44,15 +44,6 @@ fun KeyboardScreen(
             .drawBehind {
                 drawIosBackground(isDarkTheme)
             }
-            .then(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    Modifier.graphicsLayer {
-                        alpha = 0.99f
-                    }
-                } else {
-                    Modifier
-                }
-            )
     ) {
         Column(
             modifier = Modifier
@@ -78,7 +69,7 @@ fun KeyboardScreen(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
                             stiffness = Spring.StiffnessLow
                         ),
-                        initialOffsetX = { fullWidth -> fullWidth * direction * 0.3f }
+                        initialOffsetX = { fullWidth -> (fullWidth * direction * 0.3f).toInt() }
                     ) + fadeIn(
                         animationSpec = tween(200)
                     ) togetherWith slideOutHorizontally(
@@ -86,13 +77,14 @@ fun KeyboardScreen(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
                             stiffness = Spring.StiffnessLow
                         ),
-                        targetOffsetX = { fullWidth -> -fullWidth * direction * 0.3f }
+                        targetOffsetX = { fullWidth -> (-fullWidth * direction * 0.3f).toInt() }
                     ) + fadeOut(
                         animationSpec = tween(200)
                     )
                 },
                 label = "layoutTransition"
-            ) { targetLayout ->
+            ) { targetLayoutType ->
+                val targetLayout = LayoutProvider.getLayout(targetLayoutType)
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
