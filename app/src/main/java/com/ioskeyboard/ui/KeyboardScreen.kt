@@ -2,14 +2,9 @@ package com.ioskeyboard.ui
 
 import android.os.Build
 import android.os.Build.VERSION_CODES.S
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.using
-import androidx.compose.animation.core.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,17 +20,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
-import com.ioskeyboard.model.Key
 import com.ioskeyboard.model.KeyboardLayout
-import com.ioskeyboard.model.KeyEvent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.CornerRadius
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.RenderEffect
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun KeyboardScreen(
     viewModel: KeyboardViewModel,
@@ -61,9 +49,11 @@ fun KeyboardScreen(
             }
             .then(
                 if (Build.VERSION.SDK_INT >= S) {
-                    Modifier.renderEffect(
-                        RenderEffect.createBlurEffect(20.dp, 20.dp, Shader.TileMode.CLAMP)
-                    )
+                    Modifier.graphicsLayer {
+                        renderEffect = android.graphics.RenderEffect.createBlurEffect(
+                            20f, 20f, android.graphics.Shader.TileMode.CLAMP
+                        )
+                    }
                 } else {
                     Modifier
                 }
@@ -76,19 +66,16 @@ fun KeyboardScreen(
                 .padding(horizontal = 4.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Suggestion Bar
-            @OptIn(androidx.compose.animation.ExperimentalAnimationApi::class)
             SuggestionBar(
                 suggestions = suggestions,
                 colors = colorScheme,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Keyboard Layout with transition
             AnimatedContent(
                 targetState = layout,
                 transitionSpec = {
-                    spring(dampingRatio = Spring.DampingRatioMediumBouncy) with fadeIn() using fadeOut()
+                    fadeIn() with fadeOut()
                 },
                 label = "layoutTransition"
             ) { targetLayout ->
@@ -126,7 +113,6 @@ fun KeyboardScreen(
 }
 
 private fun DrawScope.drawBlurBackground(colorScheme: androidx.compose.material3.ColorScheme) {
-    // Draw a subtle gradient background
     val gradient = Brush.verticalGradient(
         colors = listOf(
             colorScheme.background.copy(alpha = 0.95f),
@@ -137,7 +123,6 @@ private fun DrawScope.drawBlurBackground(colorScheme: androidx.compose.material3
     )
     drawRect(brush = gradient)
 
-    // Draw noise texture (subtle dots)
     val noiseAlpha = 0.03f
     for (i in 0 until 20) {
         for (j in 0 until 20) {
@@ -146,7 +131,7 @@ private fun DrawScope.drawBlurBackground(colorScheme: androidx.compose.material3
             drawCircle(
                 color = if (colorScheme.onBackground == Color.White) Color.White else Color.Black,
                 radius = 1.dp.toPx() / 2,
-                center = androidx.compose.ui.geometry.Offset(x, y),
+                center = Offset(x, y),
                 alpha = noiseAlpha
             )
         }

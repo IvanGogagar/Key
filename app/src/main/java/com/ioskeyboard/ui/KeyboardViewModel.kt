@@ -1,10 +1,10 @@
 package com.ioskeyboard.ui
 
-import android.view.KeyEvent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ioskeyboard.model.KeyboardAction
 import com.ioskeyboard.model.KeyboardLayout
+import com.ioskeyboard.model.KeyEvent
 import com.ioskeyboard.model.LayoutProvider
 import com.ioskeyboard.model.LayoutType
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -133,5 +133,25 @@ class KeyboardViewModel : ViewModel() {
 
     fun toggleTheme() {
         _isDarkTheme.value = !_isDarkTheme.value
+    }
+
+    private fun switchLayout() {
+        _currentLayout.value = when (_currentLayout.value) {
+            LayoutType.ENGLISH -> LayoutType.RUSSIAN
+            LayoutType.RUSSIAN -> LayoutType.SYMBOLS
+            LayoutType.SYMBOLS -> LayoutType.ENGLISH
+            LayoutType.NUMBERS -> LayoutType.ENGLISH
+        }
+    }
+
+    private fun toggleShift() {
+        _isShifted.value = !_isShifted.value
+    }
+
+    private fun toggleCapsLock() {
+        _isCapsLock.value = !_isCapsLock.value
+        if (_isCapsLock.value) {
+            _isShifted.value = true
+        }
     }
 }

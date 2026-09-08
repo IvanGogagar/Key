@@ -1,12 +1,9 @@
 package com.ioskeyboard.ime
 
-import android.content.Intent
-import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.inputmethodservice.InputMethodService
 import android.view.inputmethod.InputConnection
-import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodService
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.ComposeView
@@ -29,13 +26,14 @@ class ImeKeyboardService : InputMethodService() {
     }
 
     override fun onCreateInputView(): View {
+        val service = this
         composeView = ComposeView(this).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 IOSStyleKeyboardTheme {
                     val viewModel: KeyboardViewModel = viewModel()
                     val lifecycleOwner = LocalLifecycleOwner.current
-                    val currentInputConnection = currentInputConnection
+                    val currentInputConnection = service.currentInputConnection
 
                     LaunchedEffect(lifecycleOwner, viewModel) {
                         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -60,13 +58,10 @@ class ImeKeyboardService : InputMethodService() {
                                         }
                                     }
                                     is KeyboardAction.SwitchLayout -> {
-                                        // Handled in ViewModel
                                     }
                                     is KeyboardAction.ToggleShift -> {
-                                        // Handled in ViewModel
                                     }
                                     is KeyboardAction.ToggleCapsLock -> {
-                                        // Handled in ViewModel
                                     }
                                     is KeyboardAction.TextInput -> {
                                         if (currentInputConnection != null) {
@@ -88,20 +83,18 @@ class ImeKeyboardService : InputMethodService() {
     private fun sendKeyEvent(keyCode: Int, label: String) {
         val connection = currentInputConnection ?: return
         when (keyCode) {
-            KeyEvent.KEYCODE_SHIFT_LEFT -> {
-                // Shift is handled by ViewModel state, no need to send to connection
+            59 -> {
             }
-            KeyEvent.KEYCODE_DEL -> {
+            67 -> {
                 connection.deleteSurroundingText(1, 0)
             }
-            KeyEvent.KEYCODE_SPACE -> {
+            32 -> {
                 connection.commitText(" ", 1)
             }
-            KeyEvent.KEYCODE_ENTER -> {
+            10 -> {
                 connection.commitText("\n", 1)
             }
-            KeyEvent.KEYCODE_LANGUAGE_SWITCH -> {
-                // Language switch is handled by ViewModel
+            1000 -> {
             }
             else -> {
                 connection.commitText(label, 1)
