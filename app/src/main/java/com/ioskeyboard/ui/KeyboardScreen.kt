@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,7 +42,6 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.ioskeyboard.model.KeyRow
 import com.ioskeyboard.model.LayoutProvider
@@ -123,63 +123,69 @@ fun KeyboardScreen(
                 spotColor = Color.Black.copy(alpha = 0.30f)
             )
             .clip(keyboardShape)
-            .graphicsLayer {
-                if (blurEnabled) {
-                    renderEffect = RenderEffect
-                        .createBlurEffect(BLUR_RADIUS, BLUR_RADIUS, Shader.TileMode.MIRROR)
-                        .asComposeRenderEffect()
-                } else {
-                    alpha = 0.92f
-                }
-            }
-            .drawWithCache {
-                val width = size.width
-                val height = size.height
-
-                val gradientBrush = Brush.verticalGradient(
-                    colorStops = if (isDarkTheme) DarkGradientStops else LightGradientStops,
-                    startY = 0f,
-                    endY = height
-                )
-
-                val highlightTopPx = with(density) { HIGHLIGHT_HEIGHT_DP.toPx() }
-                val highlightColor = if (isDarkTheme) {
-                    Color.White.copy(alpha = HIGHLIGHT_ALPHA_DARK)
-                } else {
-                    Color.White.copy(alpha = HIGHLIGHT_ALPHA_LIGHT)
-                }
-                val highlightBrush = Brush.verticalGradient(
-                    colors = listOf(highlightColor, Color.Transparent),
-                    startY = 0f,
-                    endY = highlightTopPx
-                )
-
-                val scanlineStepPx = with(density) { SCANLINE_STEP_DP.toPx() }
-                val scanlineColor = if (isDarkTheme) {
-                    Color.White.copy(alpha = NOISE_ALPHA_DARK)
-                } else {
-                    Color.Black.copy(alpha = NOISE_ALPHA_LIGHT)
-                }
-                val scanlineCount = (height / scanlineStepPx).toInt().coerceAtMost(120)
-                val scanlinePath = Path().apply {
-                    var y = 0f
-                    var i = 0
-                    while (i < scanlineCount) {
-                        moveTo(0f, y)
-                        lineTo(width, y)
-                        y += scanlineStepPx
-                        i++
+    ) {
+        // Слой 1: Фон — градиент, полоски, blur
+        Spacer(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer {
+                    if (blurEnabled) {
+                        renderEffect = RenderEffect
+                            .createBlurEffect(BLUR_RADIUS, BLUR_RADIUS, Shader.TileMode.MIRROR)
+                            .asComposeRenderEffect()
+                    } else {
+                        alpha = 0.92f
                     }
                 }
+                .drawWithCache {
+                    val width = size.width
+                    val height = size.height
 
-                onDrawWithContent {
-                    drawRect(brush = gradientBrush)
-                    drawRect(brush = highlightBrush)
-                    drawPath(scanlinePath, color = scanlineColor, style = scanlineStroke)
-                    drawContent()
+                    val gradientBrush = Brush.verticalGradient(
+                        colorStops = if (isDarkTheme) DarkGradientStops else LightGradientStops,
+                        startY = 0f,
+                        endY = height
+                    )
+
+                    val highlightTopPx = with(density) { HIGHLIGHT_HEIGHT_DP.toPx() }
+                    val highlightColor = if (isDarkTheme) {
+                        Color.White.copy(alpha = HIGHLIGHT_ALPHA_DARK)
+                    } else {
+                        Color.White.copy(alpha = HIGHLIGHT_ALPHA_LIGHT)
+                    }
+                    val highlightBrush = Brush.verticalGradient(
+                        colors = listOf(highlightColor, Color.Transparent),
+                        startY = 0f,
+                        endY = highlightTopPx
+                    )
+
+                    val scanlineStepPx = with(density) { SCANLINE_STEP_DP.toPx() }
+                    val scanlineColor = if (isDarkTheme) {
+                        Color.White.copy(alpha = NOISE_ALPHA_DARK)
+                    } else {
+                        Color.Black.copy(alpha = NOISE_ALPHA_LIGHT)
+                    }
+                    val scanlineCount = (height / scanlineStepPx).toInt().coerceAtMost(120)
+                    val scanlinePath = Path().apply {
+                        var y = 0f
+                        var i = 0
+                        while (i < scanlineCount) {
+                            moveTo(0f, y)
+                            lineTo(width, y)
+                            y += scanlineStepPx
+                            i++
+                        }
+                    }
+
+                    onDrawWithContent {
+                        drawRect(brush = gradientBrush)
+                        drawRect(brush = highlightBrush)
+                        drawPath(scanlinePath, color = scanlineColor, style = scanlineStroke)
+                    }
                 }
-            }
-    ) {
+        )
+
+        // Слой 2: Контент — чёткие клавиши и подсказки
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -200,23 +206,24 @@ fun KeyboardScreen(
                 targetState = currentLayoutType,
                 transitionSpec = {
                     val isForward = targetState.ordinal > initialState.ordinal
-                    val slideSpec = tween<IntOffset>(200)
-                    val fadeSpec = tween<Float>(150)
-                    val scaleSpec = tween<Float>(200)
 
                     slideInHorizontally(
-                        animationSpec = slideSpec,
-                        initialOffsetX = { width -> if (isForward) width / 3 else -width / 3 }
-                    ) + fadeIn(animationSpec = fadeSpec) + scaleIn(
+                        animationSpec = tween(150),
+                        initialOffsetX = { if (isForward) it / 3 else -it / 3 }
+                    ) + fadeIn(
+                        animationSpec = tween(150)
+                    ) + scaleIn(
                         initialScale = 0.96f,
-                        animationSpec = scaleSpec
+                        animationSpec = tween(150)
                     ) togetherWith
                     slideOutHorizontally(
-                        animationSpec = slideSpec,
-                        targetOffsetX = { width -> if (isForward) -width / 3 else width / 3 }
-                    ) + fadeOut(animationSpec = fadeSpec) + scaleOut(
+                        animationSpec = tween(150),
+                        targetOffsetX = { if (isForward) -it / 3 else it / 3 }
+                    ) + fadeOut(
+                        animationSpec = tween(150)
+                    ) + scaleOut(
                         targetScale = 0.96f,
-                        animationSpec = scaleSpec
+                        animationSpec = tween(150)
                     ) using SizeTransform(clip = false)
                 },
                 label = "layoutAnim"
