@@ -2,6 +2,7 @@ package com.ioskeyboard.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.sp
 fun SuggestionBar(
     suggestions: List<String>,
     colors: ColorScheme,
+    onSuggestionClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val visible = suggestions.isNotEmpty()
@@ -41,7 +43,9 @@ fun SuggestionBar(
                     text = suggestion,
                     color = colors.onSurface,
                     fontSize = 16.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .clickable { onSuggestionClick(suggestion) }
                 )
             }
         }

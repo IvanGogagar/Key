@@ -3,8 +3,7 @@ package com.ioskeyboard.ui
 import android.os.Build
 import android.os.Build.VERSION_CODES.S
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +37,7 @@ fun KeyboardScreen(
 
     val layout = viewModel.keyboardLayout
     val colorScheme = MaterialTheme.colorScheme
+    val isShiftActive = isShifted || isCapsLock
 
     Surface(
         modifier = modifier
@@ -68,13 +68,24 @@ fun KeyboardScreen(
             SuggestionBar(
                 suggestions = suggestions,
                 colors = colorScheme,
+                onSuggestionClick = { suggestion ->
+                    viewModel.onKeyPress(0, suggestion)
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
             AnimatedContent(
                 targetState = layout,
                 transitionSpec = {
-                    fadeIn() with fadeOut()
+                    val direction = if (targetState.name > initialState.name) 1 else -1
+                    slideInHorizontally(
+                        animationSpec = tween(300),
+                        initialOffsetX = { fullWidth -> fullWidth * direction }
+                    ) + fadeIn(tween(300)) togetherWith
+                    slideOutHorizontally(
+                        animationSpec = tween(300),
+                        targetOffsetX = { fullWidth -> -fullWidth * direction }
+                    ) + fadeOut(tween(300))
                 },
                 label = "layoutTransition"
             ) { targetLayout ->
@@ -89,14 +100,13 @@ fun KeyboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             row.keys.forEach { key ->
-                                val keyWeight = when (key.label) {
-                                    "␣", "⇧", "⌫", "🌐", "⏎", "123", "ABC" -> 1.5f
+                                val keyWeight = when (key.code) {
+                                    32, 59, 67, 1000, 10, -1 -> 1.5f
                                     else -> 1f
                                 }
                                 KeyboardKey(
                                     key = key,
-                                    isPressed = false,
-                                    isShiftActive = isShifted || isCapsLock,
+                                    isShiftActive = isShiftActive,
                                     colors = colorScheme,
                                     onKeyPress = { viewModel.onKeyPress(key.code, key.label) },
                                     onLongPress = { viewModel.onLongPress(key.code) },

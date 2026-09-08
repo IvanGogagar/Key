@@ -25,17 +25,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun KeyboardKey(
     key: com.ioskeyboard.model.Key,
-    isPressed: Boolean,
     isShiftActive: Boolean,
     colors: ColorScheme,
     onKeyPress: () -> Unit,
@@ -47,12 +50,7 @@ fun KeyboardKey(
     val isPressedState by interactionSource.collectIsPressedAsState()
 
     var showPopup by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressedState) 0.9f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "keyScale"
-    )
+    var keySize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
 
     LaunchedEffect(isPressedState) {
         if (isPressedState) {
@@ -63,9 +61,20 @@ fun KeyboardKey(
         }
     }
 
+    val scale by animateFloatAsState(
+        targetValue = if (isPressedState) 0.9f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "keyScale"
+    )
+
+    val displayLabel = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
+            .onGloballyPositioned { coordinates ->
+                keySize = coordinates.size
+            }
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(8.dp)
@@ -105,26 +114,31 @@ fun KeyboardKey(
         )
 
         Text(
-            text = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label,
+            text = displayLabel,
             color = colors.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
+    }
 
-        if (showPopup) {
+    if (showPopup) {
+        Popup(
+            alignment = Alignment.TopCenter,
+            offset = IntOffset(0, -keySize.height - 8.dp.roundToPx()),
+            properties = PopupProperties(focusable = false)
+        ) {
             Text(
-                text = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label,
+                text = displayLabel,
                 color = colors.primary,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-40).dp)
                     .background(
                         color = colors.surface,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .shadow(4.dp, RoundedCornerShape(8.dp))
             )
         }
     }

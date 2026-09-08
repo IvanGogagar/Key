@@ -43,44 +43,33 @@ class KeyboardViewModel : ViewModel() {
     val keyboardLayout: KeyboardLayout
         get() = LayoutProvider.getLayout(_currentLayout.value)
 
-    init {
-        viewModelScope.launch {
-            action.collect { action ->
-                when (action) {
-                    is KeyboardAction.TextInput -> commitText(action.text)
-                    is KeyboardAction.Delete -> deleteLastChar(action.count)
-                    is KeyboardAction.Enter -> commitText("\n")
-                    is KeyboardAction.SwitchLayout -> switchLayout()
-                    is KeyboardAction.ToggleShift -> toggleShift()
-                    is KeyboardAction.ToggleCapsLock -> toggleCapsLock()
-                    is KeyboardAction.Space -> addSpace()
-                    is KeyboardAction.KeyPress -> handleKeyPress(action.keyCode, action.label)
-                }
-            }
-        }
-    }
-
-    private fun handleKeyPress(keyCode: Int, label: String) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_SHIFT_LEFT -> toggleShift()
-            KeyEvent.KEYCODE_DEL -> deleteLastChar()
-            KeyEvent.KEYCODE_SPACE -> addSpace()
-            KeyEvent.KEYCODE_ENTER -> commitText("\n")
-            KeyEvent.KEYCODE_LANGUAGE_SWITCH -> switchLayout()
-            else -> {
-                val char = if (_isShifted.value) label.uppercase() else label
-                commitText(char)
-                if (_isShifted.value && !_isCapsLock.value) {
-                    _isShifted.value = false
-                }
-                updateSuggestions(_currentText.value + char)
-            }
-        }
-    }
-
     fun onKeyPress(keyCode: Int, label: String) {
         viewModelScope.launch {
-            _action.emit(KeyboardAction.KeyPress(keyCode, label))
+            when (keyCode) {
+                KeyEvent.KEYCODE_SHIFT_LEFT -> toggleShift()
+                KeyEvent.KEYCODE_DEL -> {
+                    deleteLastChar()
+                    _action.emit(KeyboardAction.Delete(1))
+                }
+                KeyEvent.KEYCODE_SPACE -> {
+                    addSpace()
+                    _action.emit(KeyboardAction.Space)
+                }
+                KeyEvent.KEYCODE_ENTER -> {
+                    _currentText.value += "\n"
+                    _action.emit(KeyboardAction.Enter)
+                }
+                KeyEvent.KEYCODE_LANGUAGE_SWITCH -> switchLayout()
+                else -> {
+                    val char = if (_isShifted.value || _isCapsLock.value) label.uppercase() else label
+                    _currentText.value += char
+                    if (_isShifted.value && !_isCapsLock.value) {
+                        _isShifted.value = false
+                    }
+                    updateSuggestions(_currentText.value)
+                    _action.emit(KeyboardAction.TextInput(char))
+                }
+            }
         }
     }
 
@@ -92,12 +81,9 @@ class KeyboardViewModel : ViewModel() {
                     _suggestions.value = emptyList()
                     _action.emit(KeyboardAction.Delete(100))
                 }
+                KeyEvent.KEYCODE_LANGUAGE_SWITCH -> toggleTheme()
             }
         }
-    }
-
-    private fun commitText(text: String) {
-        _currentText.value += text
     }
 
     private fun addSpace() {
@@ -118,12 +104,12 @@ class KeyboardViewModel : ViewModel() {
 
     private fun generateSuggestions(text: String): List<String> {
         val words = text.split("\\s+".toRegex()).filter { it.isNotEmpty() }
-        if (words.isEmpty()) return listOf("", "", "")
+        if (words.isEmpty()) return emptyList()
         val lastWord = words.last()
         return listOf(
-            lastWord + "1",
-            lastWord + "2",
-            lastWord + "3"
+            lastWord + "ing",
+            lastWord + "ed",
+            lastWord + "s"
         )
     }
 
