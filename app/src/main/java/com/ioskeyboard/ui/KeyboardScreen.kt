@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,10 +36,12 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.ioskeyboard.model.KeyRow
 import com.ioskeyboard.model.LayoutProvider
@@ -88,9 +91,9 @@ fun KeyboardScreen(
     viewModel: KeyboardViewModel,
     modifier: Modifier = Modifier
 ) {
-    val currentLayoutType by viewModel.currentLayout
-    val suggestions by viewModel.suggestions
-    val isDarkTheme by viewModel.isDarkTheme
+    val currentLayoutType by viewModel.currentLayout.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
     val onKeyPress = rememberUpdatedState(viewModel::onKeyPress)
     val onLongPress = rememberUpdatedState(viewModel::onLongPress)
@@ -158,7 +161,7 @@ fun KeyboardScreen(
                     Color.Black.copy(alpha = NOISE_ALPHA_LIGHT)
                 }
                 val scanlineCount = (height / scanlineStepPx).toInt().coerceAtMost(120)
-                val scanlinePath = android.graphics.Path().apply {
+                val scanlinePath = Path().apply {
                     var y = 0f
                     var i = 0
                     while (i < scanlineCount) {
@@ -197,22 +200,23 @@ fun KeyboardScreen(
                 targetState = currentLayoutType,
                 transitionSpec = {
                     val isForward = targetState.ordinal > initialState.ordinal
-                    val slideSpec = tween<Int>(200)
-                    val fadeSpec = tween<Int>(150)
+                    val slideSpec = tween<IntOffset>(200)
+                    val fadeSpec = tween<Float>(150)
+                    val scaleSpec = tween<Float>(200)
 
                     slideInHorizontally(
                         animationSpec = slideSpec,
                         initialOffsetX = { width -> if (isForward) width / 3 else -width / 3 }
                     ) + fadeIn(animationSpec = fadeSpec) + scaleIn(
                         initialScale = 0.96f,
-                        animationSpec = slideSpec
+                        animationSpec = scaleSpec
                     ) togetherWith
                     slideOutHorizontally(
                         animationSpec = slideSpec,
                         targetOffsetX = { width -> if (isForward) -width / 3 else width / 3 }
                     ) + fadeOut(animationSpec = fadeSpec) + scaleOut(
                         targetScale = 0.96f,
-                        animationSpec = slideSpec
+                        animationSpec = scaleSpec
                     ) using SizeTransform(clip = false)
                 },
                 label = "layoutAnim"

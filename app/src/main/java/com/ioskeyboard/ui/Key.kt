@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.GenericShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -221,7 +223,7 @@ fun KeyboardKey(
                 spotColor = if (isDarkTheme) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.18f)
             )
             .scale(scale)
-            .offset { IntOffset(0, translationY.toInt()) }
+            .offset(IntOffset(0, translationY.toInt()))
             .clip(KEY_SHAPE)
             .background(
                 brush = Brush.verticalGradient(
@@ -341,7 +343,7 @@ private fun KeyPopupPreview(
     }
 
     val popupShape = remember(popupPath) {
-        Shape { _, _ -> Outline.Generic(popupPath) }
+        GenericShape<Nothing> { _, _ -> addPath(popupPath) }
     }
 
     val bgColor = remember(isDark) { if (isDark) Color(0xFF5A5A5E) else Color.White }

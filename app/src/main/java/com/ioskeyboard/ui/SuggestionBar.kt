@@ -77,7 +77,7 @@ private val slotTranslationYSpring = spring<Float>(
 )
 private val slotDismissTween = tween<Float>(durationMillis = 150, easing = LinearOutSlowInEasing)
 private val slotResetTween = tween<Float>(durationMillis = 100)
-private val textTransitionTween = tween<Int>(durationMillis = 120, easing = LinearOutSlowInEasing)
+private val textTransitionTween = tween<IntOffset>(durationMillis = 120, easing = LinearOutSlowInEasing)
 
 @Composable
 fun SuggestionBar(
