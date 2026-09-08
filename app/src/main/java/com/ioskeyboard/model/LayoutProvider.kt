@@ -1,40 +1,193 @@
 package com.ioskeyboard.model
 
 object LayoutProvider {
+
     fun getEnglishLayout(): KeyboardLayout {
         val rows = listOf(
-            KeyRow(listOf(Key("q", KeyEvent.KEYCODE_Q), Key("w", KeyEvent.KEYCODE_W), Key("e", KeyEvent.KEYCODE_E), Key("r", KeyEvent.KEYCODE_R), Key("t", KeyEvent.KEYCODE_T), Key("y", KeyEvent.KEYCODE_Y), Key("u", KeyEvent.KEYCODE_U), Key("i", KeyEvent.KEYCODE_I), Key("o", KeyEvent.KEYCODE_O), Key("p", KeyEvent.KEYCODE_P))),
-            KeyRow(listOf(Key("a", KeyEvent.KEYCODE_A), Key("s", KeyEvent.KEYCODE_S), Key("d", KeyEvent.KEYCODE_D), Key("f", KeyEvent.KEYCODE_F), Key("g", KeyEvent.KEYCODE_G), Key("h", KeyEvent.KEYCODE_H), Key("j", KeyEvent.KEYCODE_J), Key("k", KeyEvent.KEYCODE_K), Key("l", KeyEvent.KEYCODE_L))),
-            KeyRow(listOf(Key("⇧", KeyEvent.KEYCODE_SHIFT_LEFT, isSpecial = true), Key("z", KeyEvent.KEYCODE_Z), Key("x", KeyEvent.KEYCODE_X), Key("c", KeyEvent.KEYCODE_C), Key("v", KeyEvent.KEYCODE_V), Key("b", KeyEvent.KEYCODE_B), Key("n", KeyEvent.KEYCODE_N), Key("m", KeyEvent.KEYCODE_M), Key("⌫", KeyEvent.KEYCODE_DEL, isSpecial = true))),
-            KeyRow(listOf(Key("123", KeyEvent.KEYCODE_UNKNOWN, isSpecial = true), Key("🌐", KeyEvent.KEYCODE_LANGUAGE_SWITCH, isSpecial = true), Key("␣", KeyEvent.KEYCODE_SPACE, isSpecial = true), Key("⏎", KeyEvent.KEYCODE_ENTER, isSpecial = true)))
+            KeyRow(listOf(
+                Key("q", 'q'.code), Key("w", 'w'.code), Key("e", 'e'.code),
+                Key("r", 'r'.code), Key("t", 't'.code), Key("y", 'y'.code),
+                Key("u", 'u'.code), Key("i", 'i'.code), Key("o", 'o'.code),
+                Key("p", 'p'.code)
+            )),
+            KeyRow(listOf(
+                Key("a", 'a'.code), Key("s", 's'.code), Key("d", 'd'.code),
+                Key("f", 'f'.code), Key("g", 'g'.code), Key("h", 'h'.code),
+                Key("j", 'j'.code), Key("k", 'k'.code), Key("l", 'l'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key("z", 'z'.code), Key("x", 'x'.code), Key("c", 'c'.code),
+                Key("v", 'v'.code), Key("b", 'b'.code), Key("n", 'n'.code),
+                Key("m", 'm'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("123", KeyEvent.KEYCODE_NUMBERS, type = KeyType.NUMBERS_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
+        )
+        return KeyboardLayout(rows, "English")
+    }
+
+    fun getEnglishShiftedLayout(): KeyboardLayout {
+        val rows = listOf(
+            KeyRow(listOf(
+                Key("Q", 'Q'.code), Key("W", 'W'.code), Key("E", 'E'.code),
+                Key("R", 'R'.code), Key("T", 'T'.code), Key("Y", 'Y'.code),
+                Key("U", 'U'.code), Key("I", 'I'.code), Key("O", 'O'.code),
+                Key("P", 'P'.code)
+            )),
+            KeyRow(listOf(
+                Key("A", 'A'.code), Key("S", 'S'.code), Key("D", 'D'.code),
+                Key("F", 'F'.code), Key("G", 'G'.code), Key("H", 'H'.code),
+                Key("J", 'J'.code), Key("K", 'K'.code), Key("L", 'L'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key("Z", 'Z'.code), Key("X", 'X'.code), Key("C", 'C'.code),
+                Key("V", 'V'.code), Key("B", 'B'.code), Key("N", 'N'.code),
+                Key("M", 'M'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("123", KeyEvent.KEYCODE_NUMBERS, type = KeyType.NUMBERS_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
         )
         return KeyboardLayout(rows, "English")
     }
 
     fun getRussianLayout(): KeyboardLayout {
         val rows = listOf(
-            KeyRow(listOf(Key("й", KeyEvent.KEYCODE_Q), Key("ц", KeyEvent.KEYCODE_W), Key("у", KeyEvent.KEYCODE_E), Key("к", KeyEvent.KEYCODE_R), Key("е", KeyEvent.KEYCODE_T), Key("н", KeyEvent.KEYCODE_Y), Key("г", KeyEvent.KEYCODE_U), Key("ш", KeyEvent.KEYCODE_I), Key("щ", KeyEvent.KEYCODE_O), Key("з", KeyEvent.KEYCODE_P))),
-            KeyRow(listOf(Key("ф", KeyEvent.KEYCODE_A), Key("ы", KeyEvent.KEYCODE_S), Key("в", KeyEvent.KEYCODE_D), Key("а", KeyEvent.KEYCODE_F), Key("п", KeyEvent.KEYCODE_G), Key("р", KeyEvent.KEYCODE_H), Key("о", KeyEvent.KEYCODE_J), Key("л", KeyEvent.KEYCODE_K), Key("д", KeyEvent.KEYCODE_L))),
-            KeyRow(listOf(Key("⇧", KeyEvent.KEYCODE_SHIFT_LEFT, isSpecial = true), Key("я", KeyEvent.KEYCODE_Z), Key("ч", KeyEvent.KEYCODE_X), Key("с", KeyEvent.KEYCODE_C), Key("м", KeyEvent.KEYCODE_V), Key("и", KeyEvent.KEYCODE_B), Key("т", KeyEvent.KEYCODE_N), Key("ь", KeyEvent.KEYCODE_M), Key("⌫", KeyEvent.KEYCODE_DEL, isSpecial = true))),
-            KeyRow(listOf(Key("123", KeyEvent.KEYCODE_UNKNOWN, isSpecial = true), Key("🌐", KeyEvent.KEYCODE_LANGUAGE_SWITCH, isSpecial = true), Key("␣", KeyEvent.KEYCODE_SPACE, isSpecial = true), Key("⏎", KeyEvent.KEYCODE_ENTER, isSpecial = true)))
+            KeyRow(listOf(
+                Key("й", 'й'.code), Key("ц", 'ц'.code), Key("у", 'у'.code),
+                Key("к", 'к'.code), Key("е", 'е'.code), Key("н", 'н'.code),
+                Key("г", 'г'.code), Key("ш", 'ш'.code), Key("щ", 'щ'.code),
+                Key("з", 'з'.code)
+            )),
+            KeyRow(listOf(
+                Key("ф", 'ф'.code), Key("ы", 'ы'.code), Key("в", 'в'.code),
+                Key("а", 'а'.code), Key("п", 'п'.code), Key("р", 'р'.code),
+                Key("о", 'о'.code), Key("л", 'л'.code), Key("д", 'д'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key("я", 'я'.code), Key("ч", 'ч'.code), Key("с", 'с'.code),
+                Key("м", 'м'.code), Key("и", 'и'.code), Key("т", 'т'.code),
+                Key("ь", 'ь'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("123", KeyEvent.KEYCODE_NUMBERS, type = KeyType.NUMBERS_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
+        )
+        return KeyboardLayout(rows, "Russian")
+    }
+
+    fun getRussianShiftedLayout(): KeyboardLayout {
+        val rows = listOf(
+            KeyRow(listOf(
+                Key("Й", 'Й'.code), Key("Ц", 'Ц'.code), Key("У", 'У'.code),
+                Key("К", 'К'.code), Key("Е", 'Е'.code), Key("Н", 'Н'.code),
+                Key("Г", 'Г'.code), Key("Ш", 'Ш'.code), Key("Щ", 'Щ'.code),
+                Key("З", 'З'.code)
+            )),
+            KeyRow(listOf(
+                Key("Ф", 'Ф'.code), Key("Ы", 'Ы'.code), Key("В", 'В'.code),
+                Key("А", 'А'.code), Key("П", 'П'.code), Key("Р", 'Р'.code),
+                Key("О", 'О'.code), Key("Л", 'Л'.code), Key("Д", 'Д'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key("Я", 'Я'.code), Key("Ч", 'Ч'.code), Key("С", 'С'.code),
+                Key("М", 'М'.code), Key("И", 'И'.code), Key("Т", 'Т'.code),
+                Key("Ь", 'Ь'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("123", KeyEvent.KEYCODE_NUMBERS, type = KeyType.NUMBERS_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
         )
         return KeyboardLayout(rows, "Russian")
     }
 
     fun getSymbolsLayout(): KeyboardLayout {
         val rows = listOf(
-            KeyRow(listOf(Key("1", KeyEvent.KEYCODE_1), Key("2", KeyEvent.KEYCODE_2), Key("3", KeyEvent.KEYCODE_3), Key("4", KeyEvent.KEYCODE_4), Key("5", KeyEvent.KEYCODE_5), Key("6", KeyEvent.KEYCODE_6), Key("7", KeyEvent.KEYCODE_7), Key("8", KeyEvent.KEYCODE_8), Key("9", KeyEvent.KEYCODE_9), Key("0", KeyEvent.KEYCODE_0))),
-            KeyRow(listOf(Key("-", KeyEvent.KEYCODE_MINUS), Key("/", KeyEvent.KEYCODE_SLASH), Key(":", KeyEvent.KEYCODE_SEMICOLON), Key(";", KeyEvent.KEYCODE_S), Key("(", KeyEvent.KEYCODE_LEFT_BRACKET), Key(")", KeyEvent.KEYCODE_RIGHT_BRACKET), Key("@", KeyEvent.KEYCODE_AT), Key("\"", KeyEvent.KEYCODE_APOSTROPHE), Key("#", KeyEvent.KEYCODE_POUND))),
-            KeyRow(listOf(Key("⇧", KeyEvent.KEYCODE_SHIFT_LEFT, isSpecial = true), Key(".", KeyEvent.KEYCODE_PERIOD), Key("?", KeyEvent.KEYCODE_COMMA), Key("!", KeyEvent.KEYCODE_EXCLAMATION), Key("'", KeyEvent.KEYCODE_APOSTROPHE), Key("&", KeyEvent.KEYCODE_AMPERSAND), Key("+", KeyEvent.KEYCODE_PLUS), Key("⌫", KeyEvent.KEYCODE_DEL, isSpecial = true))),
-            KeyRow(listOf(Key("ABC", KeyEvent.KEYCODE_UNKNOWN, isSpecial = true), Key("🌐", KeyEvent.KEYCODE_LANGUAGE_SWITCH, isSpecial = true), Key("␣", KeyEvent.KEYCODE_SPACE, isSpecial = true), Key("⏎", KeyEvent.KEYCODE_ENTER, isSpecial = true)))
+            KeyRow(listOf(
+                Key("[", '['.code), Key("]", ']'.code), Key("{", '{'.code),
+                Key("}", '}'.code), Key("#", '#'.code), Key("%", '%'.code),
+                Key("^", '^'.code), Key("*", '*'.code), Key("+", '+'.code),
+                Key("=", '='.code)
+            )),
+            KeyRow(listOf(
+                Key("_", '_'.code), Key("\\", '\\'.code), Key("|", '|'.code),
+                Key("~", '~'.code), Key("<", '<'.code), Key(">", '>'.code),
+                Key("$", '$'.code), Key("€", '€'.code), Key("£", '£'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key(".", '.'.code), Key(",", ','.code), Key("?", '?'.code),
+                Key("!", '!'.code), Key("'", '\''.code), Key("\"", '"'.code),
+                Key(":", ':'.code), Key(";", ';'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("123", KeyEvent.KEYCODE_NUMBERS, type = KeyType.NUMBERS_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
         )
         return KeyboardLayout(rows, "Symbols")
     }
 
+    fun getNumbersLayout(): KeyboardLayout {
+        val rows = listOf(
+            KeyRow(listOf(
+                Key("1", '1'.code), Key("2", '2'.code), Key("3", '3'.code),
+                Key("4", '4'.code), Key("5", '5'.code), Key("6", '6'.code),
+                Key("7", '7'.code), Key("8", '8'.code), Key("9", '9'.code),
+                Key("0", '0'.code)
+            )),
+            KeyRow(listOf(
+                Key("-", '-'.code), Key("/", '/'.code), Key(":", ':'.code),
+                Key(";", ';'.code), Key("(", '('.code), Key(")", ')'.code),
+                Key("$", '$'.code), Key("@", '@'.code)
+            )),
+            KeyRow(listOf(
+                Key("⇧", KeyEvent.KEYCODE_SHIFT, type = KeyType.SHIFT, widthWeight = 1.3f),
+                Key(".", '.'.code), Key(",", ','.code), Key("?", '?'.code),
+                Key("!", '!'.code), Key("'", '\''.code), Key("\"", '"'.code),
+                Key("#", '#'.code), Key("%", '%'.code),
+                Key("⌫", KeyEvent.KEYCODE_BACKSPACE, type = KeyType.BACKSPACE, widthWeight = 1.3f)
+            )),
+            KeyRow(listOf(
+                Key("#+=", KeyEvent.KEYCODE_NUMBERS, type = KeyType.ABC_SWITCH, widthWeight = 1.2f),
+                Key("🌐", KeyEvent.KEYCODE_GLOBE, type = KeyType.GLOBE, widthWeight = 1.0f),
+                Key("", KeyEvent.KEYCODE_SPACE, type = KeyType.SPACE, widthWeight = 4.0f),
+                Key("return", KeyEvent.KEYCODE_ENTER, type = KeyType.ENTER, widthWeight = 1.4f)
+            ))
+        )
+        return KeyboardLayout(rows, "Numbers")
+    }
+
     fun getLayout(type: LayoutType): KeyboardLayout = when (type) {
         LayoutType.ENGLISH -> getEnglishLayout()
+        LayoutType.ENGLISH_SHIFTED -> getEnglishShiftedLayout()
         LayoutType.RUSSIAN -> getRussianLayout()
+        LayoutType.RUSSIAN_SHIFTED -> getRussianShiftedLayout()
         LayoutType.SYMBOLS -> getSymbolsLayout()
-        LayoutType.NUMBERS -> getSymbolsLayout()
+        LayoutType.NUMBERS -> getNumbersLayout()
     }
 }

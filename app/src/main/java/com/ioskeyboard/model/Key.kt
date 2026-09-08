@@ -1,11 +1,22 @@
 package com.ioskeyboard.model
 
+enum class KeyType {
+    CHARACTER,
+    SHIFT,
+    BACKSPACE,
+    SPACE,
+    ENTER,
+    GLOBE,
+    NUMBERS_SWITCH,
+    ABC_SWITCH,
+    SPECIAL
+}
+
 data class Key(
     val label: String,
     val code: Int,
-    val isLongPress: Boolean = false,
-    val longPressLabel: String? = null,
-    val isSpecial: Boolean = false
+    val type: KeyType = KeyType.CHARACTER,
+    val widthWeight: Float = 1f
 )
 
 data class KeyRow(
@@ -19,7 +30,9 @@ data class KeyboardLayout(
 
 enum class LayoutType {
     ENGLISH,
+    ENGLISH_SHIFTED,
     RUSSIAN,
+    RUSSIAN_SHIFTED,
     SYMBOLS,
     NUMBERS
 }

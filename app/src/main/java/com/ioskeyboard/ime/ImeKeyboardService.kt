@@ -11,6 +11,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
@@ -22,15 +24,20 @@ import com.ioskeyboard.ui.KeyboardViewModel
 import com.ioskeyboard.ui.theme.IOSStyleKeyboardTheme
 import kotlinx.coroutines.flow.collectLatest
 
-class ImeKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRegistryOwner {
+class ImeKeyboardService : InputMethodService(),
+    LifecycleOwner,
+    SavedStateRegistryOwner,
+    ViewModelStoreOwner {
 
     private var composeView: ComposeView? = null
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val savedStateController by lazy { SavedStateRegistryController.create(this) }
+    private val viewModelStoreInstance = ViewModelStore()
     private val viewModel by lazy { KeyboardViewModel() }
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val savedStateRegistry: SavedStateRegistry get() = savedStateController.savedStateRegistry
+    override val viewModelStore: ViewModelStore get() = viewModelStoreInstance
 
     override fun onCreate() {
         super.onCreate()
@@ -50,11 +57,18 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRegis
                         viewModel.action.collectLatest { action ->
                             val connection = currentInputConnection ?: return@collectLatest
                             when (action) {
-                                is KeyboardAction.TextInput -> connection.commitText(action.text, 1)
-                                is KeyboardAction.Delete -> connection.deleteSurroundingText(action.count, 0)
-                                is KeyboardAction.Enter -> connection.commitText("\n", 1)
-                                is KeyboardAction.Space -> connection.commitText(" ", 1)
-                                else -> {}
+                                is KeyboardAction.TextInput -> {
+                                    connection.commitText(action.text, 1)
+                                }
+                                is KeyboardAction.Delete -> {
+                                    connection.deleteSurroundingText(action.count, 0)
+                                }
+                                is KeyboardAction.Enter -> {
+                                    connection.commitText("\n", 1)
+                                }
+                                is KeyboardAction.Space -> {
+                                    connection.commitText(" ", 1)
+                                }
                             }
                         }
                     }
@@ -96,6 +110,7 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRegis
     override fun onDestroy() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         composeView?.disposeComposition()
+        viewModelStoreInstance.clear()
         super.onDestroy()
     }
 }

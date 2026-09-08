@@ -16,29 +16,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class KeyboardViewModel : ViewModel() {
+
     private val _currentLayout = MutableStateFlow(LayoutType.ENGLISH)
     val currentLayout: StateFlow<LayoutType> = _currentLayout.asStateFlow()
-
-    private val _isShifted = MutableStateFlow(false)
-    val isShifted: StateFlow<Boolean> = _isShifted.asStateFlow()
-
-    private val _isCapsLock = MutableStateFlow(false)
-    val isCapsLock: StateFlow<Boolean> = _isCapsLock.asStateFlow()
-
-    private val _currentText = MutableStateFlow("")
-    val currentText: StateFlow<String> = _currentText.asStateFlow()
-
-    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
-    val suggestions: StateFlow<List<String>> = _suggestions.asStateFlow()
-
-    private val _keyboardHeight = MutableStateFlow(280f)
-    val keyboardHeight: StateFlow<Float> = _keyboardHeight.asStateFlow()
 
     private val _isDarkTheme = MutableStateFlow(false)
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
+    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
+    val suggestions: StateFlow<List<String>> = _suggestions.asStateFlow()
+
+    private val _currentText = MutableStateFlow("")
+    val currentText: StateFlow<String> = _currentText.asStateFlow()
+
     private val _action = MutableSharedFlow<KeyboardAction>()
     val action: SharedFlow<KeyboardAction> = _action.asSharedFlow()
+
+    private var lastWordStartIndex: Int = 0
 
     val keyboardLayout: KeyboardLayout
         get() = LayoutProvider.getLayout(_currentLayout.value)
@@ -46,28 +40,27 @@ class KeyboardViewModel : ViewModel() {
     fun onKeyPress(keyCode: Int, label: String) {
         viewModelScope.launch {
             when (keyCode) {
-                KeyEvent.KEYCODE_SHIFT_LEFT -> toggleShift()
-                KeyEvent.KEYCODE_DEL -> {
-                    deleteLastChar()
-                    _action.emit(KeyboardAction.Delete(1))
+                KeyEvent.KEYCODE_SHIFT -> handleShift()
+                KeyEvent.KEYCODE_BACKSPACE -> {
+                    handleBackspace()
                 }
                 KeyEvent.KEYCODE_SPACE -> {
-                    addSpace()
+                    _currentText.value += " "
+                    lastWordStartIndex = _currentText.value.length
+                    _suggestions.value = emptyList()
                     _action.emit(KeyboardAction.Space)
                 }
                 KeyEvent.KEYCODE_ENTER -> {
                     _currentText.value += "\n"
+                    lastWordStartIndex = _currentText.value.length
+                    _suggestions.value = emptyList()
                     _action.emit(KeyboardAction.Enter)
                 }
-                KeyEvent.KEYCODE_LANGUAGE_SWITCH -> switchLayout()
+                KeyEvent.KEYCODE_GLOBE -> switchLanguage()
+                KeyEvent.KEYCODE_NUMBERS -> switchToNumbers()
+                KeyEvent.KEYCODE_ABC -> switchToABC()
                 else -> {
-                    val char = if (_isShifted.value || _isCapsLock.value) label.uppercase() else label
-                    _currentText.value += char
-                    if (_isShifted.value && !_isCapsLock.value) {
-                        _isShifted.value = false
-                    }
-                    updateSuggestions(_currentText.value)
-                    _action.emit(KeyboardAction.TextInput(char))
+                    handleCharacterInput(label)
                 }
             }
         }
@@ -76,68 +69,113 @@ class KeyboardViewModel : ViewModel() {
     fun onLongPress(keyCode: Int) {
         viewModelScope.launch {
             when (keyCode) {
-                KeyEvent.KEYCODE_DEL -> {
+                KeyEvent.KEYCODE_BACKSPACE -> {
+                    val count = _currentText.value.length
                     _currentText.value = ""
+                    lastWordStartIndex = 0
                     _suggestions.value = emptyList()
-                    _action.emit(KeyboardAction.Delete(100))
+                    if (count > 0) {
+                        _action.emit(KeyboardAction.Delete(count))
+                    }
                 }
-                KeyEvent.KEYCODE_LANGUAGE_SWITCH -> toggleTheme()
             }
         }
     }
 
-    private fun addSpace() {
-        _currentText.value += " "
-        updateSuggestions(_currentText.value)
-    }
-
-    private fun deleteLastChar(count: Int = 1) {
-        if (_currentText.value.isNotEmpty()) {
-            _currentText.value = _currentText.value.dropLast(count)
-            updateSuggestions(_currentText.value)
+    fun onSuggestionSelected(suggestion: String) {
+        viewModelScope.launch {
+            if (_currentText.value.isNotEmpty() && lastWordStartIndex < _currentText.value.length) {
+                val beforeWord = _currentText.value.substring(0, lastWordStartIndex)
+                val deleteCount = _currentText.value.length - lastWordStartIndex
+                _currentText.value = beforeWord + suggestion + " "
+                lastWordStartIndex = _currentText.value.length
+                _action.emit(KeyboardAction.Delete(deleteCount))
+                _action.emit(KeyboardAction.TextInput(suggestion + " "))
+            } else {
+                _currentText.value += suggestion + " "
+                lastWordStartIndex = _currentText.value.length
+                _action.emit(KeyboardAction.TextInput(suggestion + " "))
+            }
+            _suggestions.value = emptyList()
         }
     }
 
-    private fun updateSuggestions(text: String) {
-        _suggestions.value = generateSuggestions(text)
+    private suspend fun handleCharacterInput(label: String) {
+        _currentText.value += label
+        updateCurrentWord()
+        _action.emit(KeyboardAction.TextInput(label))
     }
 
-    private fun generateSuggestions(text: String): List<String> {
-        val words = text.split("\\s+".toRegex()).filter { it.isNotEmpty() }
-        if (words.isEmpty()) return emptyList()
-        val lastWord = words.last()
+    private suspend fun handleBackspace() {
+        if (_currentText.value.isNotEmpty()) {
+            _currentText.value = _currentText.value.dropLast(1)
+            updateCurrentWord()
+            _action.emit(KeyboardAction.Delete(1))
+        }
+    }
+
+    private fun updateCurrentWord() {
+        val text = _currentText.value
+        if (text.isEmpty()) {
+            _suggestions.value = emptyList()
+            lastWordStartIndex = 0
+            return
+        }
+
+        var wordStart = text.length - 1
+        while (wordStart > 0 && text[wordStart - 1] != ' ' && text[wordStart - 1] != '\n') {
+            wordStart--
+        }
+        lastWordStartIndex = wordStart
+
+        val currentWord = text.substring(wordStart)
+        if (currentWord.isEmpty()) {
+            _suggestions.value = emptyList()
+        } else {
+            _suggestions.value = generateSuggestions(currentWord)
+        }
+    }
+
+    private fun generateSuggestions(word: String): List<String> {
+        if (word.length < 2) return emptyList()
         return listOf(
-            lastWord + "ing",
-            lastWord + "ed",
-            lastWord + "s"
-        )
+            word + "ing",
+            word + "ed",
+            word + "s"
+        ).filter { it != word }
     }
 
-    fun setKeyboardHeight(height: Float) {
-        _keyboardHeight.value = height
+    private fun handleShift() {
+        val current = _currentLayout.value
+        val newLayout = when (current) {
+            LayoutType.ENGLISH -> LayoutType.ENGLISH_SHIFTED
+            LayoutType.ENGLISH_SHIFTED -> LayoutType.ENGLISH
+            LayoutType.RUSSIAN -> LayoutType.RUSSIAN_SHIFTED
+            LayoutType.RUSSIAN_SHIFTED -> LayoutType.RUSSIAN
+            else -> current
+        }
+        _currentLayout.value = newLayout
     }
 
-    fun toggleTheme() {
-        _isDarkTheme.value = !_isDarkTheme.value
-    }
-
-    private fun switchLayout() {
-        _currentLayout.value = when (_currentLayout.value) {
-            LayoutType.ENGLISH -> LayoutType.RUSSIAN
-            LayoutType.RUSSIAN -> LayoutType.SYMBOLS
+    private fun switchLanguage() {
+        val current = _currentLayout.value
+        _currentLayout.value = when (current) {
+            LayoutType.ENGLISH, LayoutType.ENGLISH_SHIFTED -> LayoutType.RUSSIAN
+            LayoutType.RUSSIAN, LayoutType.RUSSIAN_SHIFTED -> LayoutType.SYMBOLS
             LayoutType.SYMBOLS -> LayoutType.ENGLISH
             LayoutType.NUMBERS -> LayoutType.ENGLISH
         }
     }
 
-    private fun toggleShift() {
-        _isShifted.value = !_isShifted.value
+    private fun switchToNumbers() {
+        _currentLayout.value = LayoutType.NUMBERS
     }
 
-    private fun toggleCapsLock() {
-        _isCapsLock.value = !_isCapsLock.value
-        if (_isCapsLock.value) {
-            _isShifted.value = true
-        }
+    private fun switchToABC() {
+        _currentLayout.value = LayoutType.ENGLISH
+    }
+
+    fun toggleTheme() {
+        _isDarkTheme.value = !_isDarkTheme.value
     }
 }

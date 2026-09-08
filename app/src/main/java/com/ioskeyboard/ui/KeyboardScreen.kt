@@ -1,26 +1,22 @@
 package com.ioskeyboard.ui
 
 import android.os.Build
-import android.os.Build.VERSION_CODES.S
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
-import com.ioskeyboard.model.KeyboardLayout
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -29,88 +25,99 @@ fun KeyboardScreen(
     modifier: Modifier = Modifier
 ) {
     val currentLayout by viewModel.currentLayout.collectAsState()
-    val isShifted by viewModel.isShifted.collectAsState()
-    val isCapsLock by viewModel.isCapsLock.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
-    val keyboardHeight by viewModel.keyboardHeight.collectAsState()
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
     val layout = viewModel.keyboardLayout
-    val colorScheme = MaterialTheme.colorScheme
-    val isShiftActive = isShifted || isCapsLock
 
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(keyboardHeight.dp)
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(colorScheme.background)
+            .height(282.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp),
+                ambientColor = Color.Black.copy(alpha = 0.15f),
+                spotColor = Color.Black.copy(alpha = 0.25f)
+            )
+            .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp))
             .drawBehind {
-                drawBlurBackground(colorScheme)
+                drawIosBackground(isDarkTheme)
             }
             .then(
-                if (Build.VERSION.SDK_INT >= S) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     Modifier.graphicsLayer {
                         alpha = 0.99f
                     }
                 } else {
                     Modifier
                 }
-            ),
-        tonalElevation = 0.dp
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 8.dp),
+                .padding(horizontal = 3.dp, vertical = 6.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             SuggestionBar(
                 suggestions = suggestions,
-                colors = colorScheme,
+                isDarkTheme = isDarkTheme,
                 onSuggestionClick = { suggestion ->
-                    viewModel.onKeyPress(0, suggestion)
+                    viewModel.onSuggestionSelected(suggestion)
                 },
                 modifier = Modifier.fillMaxWidth()
             )
 
             AnimatedContent(
-                targetState = layout,
+                targetState = currentLayout,
                 transitionSpec = {
-                    val direction = if (targetState.name > initialState.name) 1 else -1
+                    val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
                     slideInHorizontally(
-                        animationSpec = tween(300),
-                        initialOffsetX = { fullWidth -> fullWidth * direction }
-                    ) + fadeIn(tween(300)) togetherWith
-                    slideOutHorizontally(
-                        animationSpec = tween(300),
-                        targetOffsetX = { fullWidth -> -fullWidth * direction }
-                    ) + fadeOut(tween(300))
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        initialOffsetX = { fullWidth -> fullWidth * direction * 0.3f }
+                    ) + fadeIn(
+                        animationSpec = tween(200)
+                    ) togetherWith slideOutHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        targetOffsetX = { fullWidth -> -fullWidth * direction * 0.3f }
+                    ) + fadeOut(
+                        animationSpec = tween(200)
+                    )
                 },
                 label = "layoutTransition"
             ) { targetLayout ->
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceEvenly
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    targetLayout.rows.forEach { row ->
+                    targetLayout.rows.forEachIndexed { rowIndex, row ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (rowIndex == targetLayout.rows.lastIndex) {
+                                        Modifier.padding(horizontal = 4.dp)
+                                    } else {
+                                        Modifier.padding(horizontal = 2.dp)
+                                    }
+                                ),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             row.keys.forEach { key ->
-                                val keyWeight = when (key.code) {
-                                    32, 59, 67, 1000, 10, -1 -> 1.5f
-                                    else -> 1f
-                                }
                                 KeyboardKey(
                                     key = key,
-                                    isShiftActive = isShiftActive,
-                                    colors = colorScheme,
+                                    isDarkTheme = isDarkTheme,
                                     onKeyPress = { viewModel.onKeyPress(key.code, key.label) },
                                     onLongPress = { viewModel.onLongPress(key.code) },
-                                    modifier = Modifier.weight(keyWeight)
+                                    modifier = Modifier.weight(key.widthWeight)
                                 )
                             }
                         }
@@ -121,28 +128,61 @@ fun KeyboardScreen(
     }
 }
 
-private fun DrawScope.drawBlurBackground(colorScheme: androidx.compose.material3.ColorScheme) {
-    val gradient = Brush.verticalGradient(
-        colors = listOf(
-            colorScheme.background.copy(alpha = 0.95f),
-            colorScheme.background.copy(alpha = 0.85f)
-        ),
-        startY = 0f,
-        endY = size.height
-    )
-    drawRect(brush = gradient)
-
-    val noiseAlpha = 0.03f
-    for (i in 0 until 20) {
-        for (j in 0 until 20) {
-            val x = (size.width / 20) * i + (size.width / 40)
-            val y = (size.height / 20) * j + (size.height / 40)
-            drawCircle(
-                color = if (colorScheme.onBackground == Color.White) Color.White else Color.Black,
-                radius = 1.dp.toPx() / 2,
-                center = Offset(x, y),
-                alpha = noiseAlpha
+private fun DrawScope.drawIosBackground(isDarkTheme: Boolean) {
+    if (isDarkTheme) {
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF3A3A3C),
+                    Color(0xFF2C2C2E),
+                    Color(0xFF1C1C1E)
+                ),
+                startY = 0f,
+                endY = size.height
             )
-        }
+        )
+    } else {
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFFD5D5DA),
+                    Color(0xFFC9C9CE),
+                    Color(0xFFBEBEC3)
+                ),
+                startY = 0f,
+                endY = size.height
+            )
+        )
     }
+
+    val lineColor = if (isDarkTheme) {
+        Color.White.copy(alpha = 0.04f)
+    } else {
+        Color.Black.copy(alpha = 0.05f)
+    }
+    for (i in 0..30) {
+        val y = (size.height / 30) * i
+        drawLine(
+            color = lineColor,
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = 0.5f
+        )
+    }
+
+    val highlightColor = if (isDarkTheme) {
+        Color.White.copy(alpha = 0.02f)
+    } else {
+        Color.White.copy(alpha = 0.35f)
+    }
+    drawRect(
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                highlightColor,
+                Color.Transparent
+            ),
+            startY = 0f,
+            endY = size.height * 0.15f
+        )
+    )
 }
