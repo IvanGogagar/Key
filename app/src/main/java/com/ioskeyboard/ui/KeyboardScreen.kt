@@ -27,6 +27,13 @@ import androidx.compose.ui.unit.dp
 import com.ioskeyboard.model.Key
 import com.ioskeyboard.model.KeyboardLayout
 import com.ioskeyboard.model.KeyEvent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.CornerRadius
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun KeyboardScreen(
@@ -55,7 +62,7 @@ fun KeyboardScreen(
             .then(
                 if (Build.VERSION.SDK_INT >= S) {
                     Modifier.renderEffect(
-                        RenderEffect.createBlurEffect(20f, 20f, Shader.TileMode.CLAMP)
+                        RenderEffect.createBlurEffect(20.dp, 20.dp, Shader.TileMode.CLAMP)
                     )
                 } else {
                     Modifier
@@ -70,6 +77,7 @@ fun KeyboardScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Suggestion Bar
+            @OptIn(androidx.compose.animation.ExperimentalAnimationApi::class)
             SuggestionBar(
                 suggestions = suggestions,
                 colors = colorScheme,

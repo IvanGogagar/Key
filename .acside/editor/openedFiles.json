@@ -1,0 +1,95 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/ime/ImeKeyboardService.kt",
+      "selection": {
+        "end": {
+          "column": 42,
+          "index": 299,
+          "line": 8
+        },
+        "start": {
+          "column": 42,
+          "index": 299,
+          "line": 8
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/ui/KeyboardScreen.kt",
+      "selection": {
+        "end": {
+          "column": 78,
+          "index": 2991,
+          "line": 79
+        },
+        "start": {
+          "column": 78,
+          "index": 2991,
+          "line": 79
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/ui/Key.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/model/KeyEvent.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/model/KeyboardAction.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        },
+        "start": {
+          "column": 0,
+          "index": 0,
+          "line": 0
+        }
+      }
+    },
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/ui/KeyboardViewModel.kt",
+      "selection": {
+        "end": {
+          "column": 28,
+          "index": 56,
+          "line": 2
+        },
+        "start": {
+          "column": 28,
+          "index": 56,
+          "line": 2
+        }
+      }
+    }
+  ],
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/Key/app/src/main/java/com/ioskeyboard/ui/KeyboardViewModel.kt"
+}

@@ -28,28 +28,6 @@
 
 ## Сборка
 
-### Требования
-- JDK 17+
-- Android SDK Platform 34
-- Android SDK Build-Tools 34.0.0
-- Gradle 8.x
-
-### Команды сборки
-```bash
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-export ANDROID_HOME=/opt/android-sdk
-cd /public/Key
-gradle --no-daemon assembleDebug
-```
-
-Готовый APK будет находиться в `app/build/outputs/apk/debug/app-debug.apk`.
-
-## Установка и активация
-1. Установите APK на устройство.
-2. Откройте **Настройки → Система → Языки и ввод → Виртуальная клавиатура → Управление клавиатурами**.
-3. Включите **iOS Style Keyboard**.
-4. Выберите её как клавиатуру по умолчанию.
-
 ## Примечания
 - Проект использует `androidx.lifecycle:lifecycle-runtime-compose` для `repeatOnLifecycle`.
 - `RenderEffect` применяется на API 31+.
