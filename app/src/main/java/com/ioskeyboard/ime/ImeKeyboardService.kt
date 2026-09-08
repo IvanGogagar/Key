@@ -35,21 +35,7 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
 
         composeView?.disposeComposition()
 
-        composeView = object : ComposeView(this) {
-            override fun shouldCreateCompositionOnAttachedToWindow() = false
-        }.apply {
-            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View) {
-                    var p: ViewParent? = v.parent
-                    while (p is View) {
-                        p.setViewTreeLifecycleOwner(this@ImeKeyboardService)
-                        p = p.parent
-                    }
-                    (v as ComposeView).createComposition()
-                }
-
-                override fun onViewDetachedFromWindow(v: View) {}
-            })
+        composeView = ComposeView(this).apply {
             setContent {
                 IOSStyleKeyboardTheme {
                     LaunchedEffect(Unit) {
@@ -70,7 +56,16 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
             }
         }
 
-        val container = FrameLayout(this).apply {
+        val container = object : FrameLayout(this) {
+            override fun onAttachedToWindow() {
+                super.onAttachedToWindow()
+                var p: ViewParent? = parent
+                while (p is View) {
+                    p.setViewTreeLifecycleOwner(this@ImeKeyboardService)
+                    p = p.parent
+                }
+            }
+        }.apply {
             setViewTreeLifecycleOwner(this@ImeKeyboardService)
             addView(composeView)
         }
