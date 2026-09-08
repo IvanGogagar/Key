@@ -1,5 +1,8 @@
 package com.ioskeyboard.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 enum class KeyType {
     CHARACTER,
     SHIFT,
@@ -12,6 +15,7 @@ enum class KeyType {
     SPECIAL
 }
 
+@Immutable
 data class Key(
     val label: String,
     val code: Int,
@@ -19,15 +23,18 @@ data class Key(
     val widthWeight: Float = 1f
 )
 
+@Immutable
 data class KeyRow(
     val keys: List<Key>
 )
 
+@Immutable
 data class KeyboardLayout(
     val rows: List<KeyRow>,
     val name: String
 )
 
+@Immutable
 enum class LayoutType {
     ENGLISH,
     ENGLISH_SHIFTED,

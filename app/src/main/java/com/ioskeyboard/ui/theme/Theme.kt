@@ -6,48 +6,65 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val IOSLightPrimary = Color(0xFF007AFF)
-private val IOSLightOnPrimary = Color.White
-private val IOSLightBackground = Color(0xFFF2F2F7)
-private val IOSLightOnBackground = Color.Black
-private val IOSLightSurface = Color(0xFFFFFFFF)
-private val IOSLightOnSurface = Color.Black
-private val IOSLightSurfaceVariant = Color(0xFFE5E5EA)
-private val IOSLightOnSurfaceVariant = Color(0xFF3C3C43)
-private val IOSLightOutline = Color(0xFFC6C6C8)
+private object IOSColors {
+    val Blue = Color(0xFF007AFF)
+    val Indigo = Color(0xFF5856D6)
+    val Green = Color(0xFF34C759)
+    val Red = Color(0xFFFF3B30)
+    val Orange = Color(0xFFFF9500)
+    val Yellow = Color(0xFFFFCC00)
 
-private val IOSDarkPrimary = Color(0xFF0A84FF)
-private val IOSDarkOnPrimary = Color.White
-private val IOSDarkBackground = Color(0xFF000000)
-private val IOSDarkOnBackground = Color.White
-private val IOSDarkSurface = Color(0xFF1C1C1E)
-private val IOSDarkOnSurface = Color.White
-private val IOSDarkSurfaceVariant = Color(0xFF2C2C2E)
-private val IOSDarkOnSurfaceVariant = Color(0xFFAEAEB2)
-private val IOSDarkOutline = Color(0xFF38383A)
+    val Gray1 = Color(0xFF8E8E93)
+    val Gray2 = Color(0xFFAEAEB2)
+    val Gray3 = Color(0xFFC7C7CC)
+    val Gray4 = Color(0xFFD1D1D6)
+    val Gray5 = Color(0xFFE5E5EA)
+    val Gray6 = Color(0xFFF2F2F7)
 
-private val LightColorScheme = lightColorScheme(
-    primary = IOSLightPrimary,
-    onPrimary = IOSLightOnPrimary,
-    background = IOSLightBackground,
-    onBackground = IOSLightOnBackground,
-    surface = IOSLightSurface,
-    onSurface = IOSLightOnSurface,
-    surfaceVariant = IOSLightSurfaceVariant,
-    onSurfaceVariant = IOSLightOnSurfaceVariant,
-    outline = IOSLightOutline
+    val Label = Color(0xFF000000)
+    val SecondaryLabel = Color(0xFF3C3C43).copy(alpha = 0.6f)
+    val TertiaryLabel = Color(0xFF3C3C43).copy(alpha = 0.3f)
+
+    val Separator = Color(0xFF3C3C43).copy(alpha = 0.29f)
+    val GroupedBg = Color(0xFFF2F2F7)
+}
+
+private val LightScheme = lightColorScheme(
+    primary = IOSColors.Blue,
+    onPrimary = Color.White,
+    primaryContainer = IOSColors.Blue.copy(alpha = 0.15f),
+    onPrimaryContainer = IOSColors.Blue,
+    secondary = IOSColors.Gray1,
+    onSecondary = Color.White,
+    background = IOSColors.GroupedBg,
+    onBackground = IOSColors.Label,
+    surface = Color.White,
+    onSurface = IOSColors.Label,
+    surfaceVariant = IOSColors.Gray5,
+    onSurfaceVariant = IOSColors.SecondaryLabel,
+    outline = IOSColors.Gray4,
+    outlineVariant = IOSColors.Gray5,
+    error = IOSColors.Red,
+    onError = Color.White
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = IOSDarkPrimary,
-    onPrimary = IOSDarkOnPrimary,
-    background = IOSDarkBackground,
-    onBackground = IOSDarkOnBackground,
-    surface = IOSDarkSurface,
-    onSurface = IOSDarkOnSurface,
-    surfaceVariant = IOSDarkSurfaceVariant,
-    onSurfaceVariant = IOSDarkOnSurfaceVariant,
-    outline = IOSDarkOutline
+private val DarkScheme = darkColorScheme(
+    primary = IOSColors.Blue,
+    onPrimary = Color.White,
+    primaryContainer = IOSColors.Blue.copy(alpha = 0.2f),
+    onPrimaryContainer = IOSColors.Blue.copy(alpha = 0.9f),
+    secondary = IOSColors.Gray2,
+    onSecondary = Color.Black,
+    background = Color.Black,
+    onBackground = Color.White,
+    surface = Color(0xFF1C1C1E),
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF2C2C2E),
+    onSurfaceVariant = IOSColors.Gray2,
+    outline = Color(0xFF38383A),
+    outlineVariant = Color(0xFF48484A),
+    error = IOSColors.Red.copy(alpha = 0.9f),
+    onError = Color.Black
 )
 
 @Composable
@@ -55,9 +72,8 @@ fun IOSStyleKeyboardTheme(
     darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkScheme else LightScheme,
         content = content
     )
 }

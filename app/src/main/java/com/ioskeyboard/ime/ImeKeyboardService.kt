@@ -22,7 +22,7 @@ import com.ioskeyboard.model.KeyboardAction
 import com.ioskeyboard.ui.KeyboardScreen
 import com.ioskeyboard.ui.KeyboardViewModel
 import com.ioskeyboard.ui.theme.IOSStyleKeyboardTheme
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 
 class ImeKeyboardService : InputMethodService(),
     LifecycleOwner,
@@ -54,21 +54,26 @@ class ImeKeyboardService : InputMethodService(),
             setContent {
                 IOSStyleKeyboardTheme(darkTheme = viewModel.isDarkTheme.collectAsState().value) {
                     LaunchedEffect(Unit) {
-                        viewModel.action.collectLatest { action ->
-                            val connection = currentInputConnection ?: return@collectLatest
-                            when (action) {
-                                is KeyboardAction.TextInput -> {
-                                    connection.commitText(action.text, 1)
+                        viewModel.action.collect { action ->
+                            val connection = currentInputConnection ?: return@collect
+                            connection.beginBatchEdit()
+                            try {
+                                when (action) {
+                                    is KeyboardAction.TextInput -> {
+                                        connection.commitText(action.text, 1)
+                                    }
+                                    is KeyboardAction.Delete -> {
+                                        connection.deleteSurroundingText(action.count, 0)
+                                    }
+                                    is KeyboardAction.Enter -> {
+                                        connection.commitText("\n", 1)
+                                    }
+                                    is KeyboardAction.Space -> {
+                                        connection.commitText(" ", 1)
+                                    }
                                 }
-                                is KeyboardAction.Delete -> {
-                                    connection.deleteSurroundingText(action.count, 0)
-                                }
-                                is KeyboardAction.Enter -> {
-                                    connection.commitText("\n", 1)
-                                }
-                                is KeyboardAction.Space -> {
-                                    connection.commitText(" ", 1)
-                                }
+                            } finally {
+                                connection.endBatchEdit()
                             }
                         }
                     }
@@ -110,6 +115,7 @@ class ImeKeyboardService : InputMethodService(),
     override fun onDestroy() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         composeView?.disposeComposition()
+        composeView = null
         viewModelStoreInstance.clear()
         super.onDestroy()
     }
