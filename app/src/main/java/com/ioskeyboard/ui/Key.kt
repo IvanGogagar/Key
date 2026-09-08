@@ -1,0 +1,156 @@
+package com.ioskeyboard.ui
+
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+
+@Composable
+fun KeyboardKey(
+    key: com.ioskeyboard.model.Key,
+    isPressed: Boolean,
+    isShiftActive: Boolean,
+    colors: ColorScheme,
+    onKeyPress: () -> Unit,
+    onLongPress: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressedState by interactionSource.collectIsPressedAsState()
+
+    var showPopup by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressedState) 0.9f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "keyScale"
+    )
+
+    LaunchedEffect(isPressedState) {
+        if (isPressedState) {
+            vibrateKey(context)
+            showPopup = true
+            delay(500)
+            showPopup = false
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .scale(scale)
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(8.dp),
+                spotColor = Color.Black.copy(alpha = 0.2f)
+            )
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        colors.surface,
+                        colors.surface.copy(alpha = 0.9f)
+                    )
+                )
+            )
+            .border(
+                width = 0.5.dp,
+                color = Color.Black.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .combinedClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onKeyPress,
+                onLongClick = onLongPress
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        // Inner glow effect
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    drawInnerGlow(colors.primary.copy(alpha = 0.1f))
+                }
+        )
+
+        // Key label
+        androidx.compose.material3.Text(
+            text = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label,
+            color = colors.onSurface,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        // Popup letter
+        if (showPopup) {
+            androidx.compose.material3.Text(
+                text = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label,
+                color = colors.primary,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-40).dp)
+                    .background(
+                        color = colors.surface,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawInnerGlow(color: Color) {
+    drawRoundRect(
+        brush = Brush.radialGradient(
+            colors = listOf(color, Color.Transparent),
+            center = center.copy(y = size.height * 0.2f),
+            radius = size.width * 0.8f
+        ),
+        cornerRadius = CornerRadius(8.dp.toPx()),
+        blendMode = BlendMode.Plus
+    )
+}
+
+private fun vibrateKey(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(VibrationEffect.createOneShot(20, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(20)
+    }
+}

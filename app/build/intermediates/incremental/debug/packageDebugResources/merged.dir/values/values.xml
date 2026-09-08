@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IOS Style Keyboard</string>
+    <string name="ime_name">iOS Style Keyboard</string>
+    <string name="ime_settings">Settings</string>
+    <style name="Theme.IOSStyleKeyboard" parent="android:Theme.Material.Light.NoActionBar"/>
+</resources>
