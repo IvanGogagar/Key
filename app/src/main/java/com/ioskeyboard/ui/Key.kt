@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
@@ -343,7 +344,7 @@ private fun KeyPopupPreview(
     }
 
     val popupShape = remember(popupPath) {
-        GenericShape<Nothing> { _, _ -> addPath(popupPath) }
+        GenericShape { _, _ -> addPath(popupPath) }
     }
 
     val bgColor = remember(isDark) { if (isDark) Color(0xFF5A5A5E) else Color.White }

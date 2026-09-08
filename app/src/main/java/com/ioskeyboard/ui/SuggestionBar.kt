@@ -77,7 +77,8 @@ private val slotTranslationYSpring = spring<Float>(
 )
 private val slotDismissTween = tween<Float>(durationMillis = 150, easing = LinearOutSlowInEasing)
 private val slotResetTween = tween<Float>(durationMillis = 100)
-private val textTransitionTween = tween<IntOffset>(durationMillis = 120, easing = LinearOutSlowInEasing)
+private val textSlideTween = tween<IntOffset>(durationMillis = 120, easing = LinearOutSlowInEasing)
+private val textFadeTween = tween<Float>(durationMillis = 120, easing = LinearOutSlowInEasing)
 
 @Composable
 fun SuggestionBar(
@@ -194,16 +195,16 @@ private fun SuggestionSlot(
             targetState = text,
             transitionSpec = {
                 slideInVertically(
-                    animationSpec = textTransitionTween,
+                    animationSpec = textSlideTween,
                     initialOffsetY = { it }
                 ) + fadeIn(
-                    animationSpec = textTransitionTween
+                    animationSpec = textFadeTween
                 ) togetherWith
                 slideOutVertically(
-                    animationSpec = textTransitionTween,
+                    animationSpec = textSlideTween,
                     targetOffsetY = { -it }
                 ) + fadeOut(
-                    animationSpec = textTransitionTween
+                    animationSpec = textFadeTween
                 )
             },
             label = "slotText"
