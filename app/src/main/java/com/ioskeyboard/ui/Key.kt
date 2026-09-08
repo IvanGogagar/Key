@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -68,6 +69,8 @@ fun KeyboardKey(
     )
 
     val displayLabel = if (isShiftActive && key.label.length == 1) key.label.uppercase() else key.label
+    val density = LocalDensity.current
+    val popupOffsetY = with(density) { -(keySize.height + 8.dp.roundToPx()) }
 
     Box(
         modifier = modifier
@@ -124,7 +127,7 @@ fun KeyboardKey(
     if (showPopup) {
         Popup(
             alignment = Alignment.TopCenter,
-            offset = IntOffset(0, -keySize.height - 8.dp.roundToPx()),
+            offset = IntOffset(0, popupOffsetY),
             properties = PopupProperties(focusable = false)
         ) {
             Text(
