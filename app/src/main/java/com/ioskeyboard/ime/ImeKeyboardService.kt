@@ -1,6 +1,7 @@
 package com.ioskeyboard.ime
 
 import android.view.View
+import android.view.ViewParent
 import android.view.inputmethod.EditorInfo
 import android.inputmethodservice.InputMethodService
 import android.widget.FrameLayout
@@ -18,7 +19,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 class ImeKeyboardService : InputMethodService(), LifecycleOwner {
 
-    private var container: FrameLayout? = null
+    private var composeView: ComposeView? = null
     private val lifecycleRegistry = LifecycleRegistry(this)
     private val viewModel by lazy { KeyboardViewModel() }
 
@@ -32,11 +33,23 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
     override fun onCreateInputView(): View {
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
 
-        container = FrameLayout(this).apply {
-            setViewTreeLifecycleOwner(this@ImeKeyboardService)
-        }
+        composeView?.disposeComposition()
 
-        val composeView = ComposeView(this).apply {
+        composeView = object : ComposeView(this) {
+            override fun shouldCreateCompositionOnAttachedToWindow() = false
+        }.apply {
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    var p: ViewParent? = v.parent
+                    while (p is View) {
+                        p.setViewTreeLifecycleOwner(this@ImeKeyboardService)
+                        p = p.parent
+                    }
+                    (v as ComposeView).createComposition()
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {}
+            })
             setContent {
                 IOSStyleKeyboardTheme {
                     LaunchedEffect(Unit) {
@@ -57,9 +70,13 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
             }
         }
 
-        container!!.addView(composeView)
+        val container = FrameLayout(this).apply {
+            setViewTreeLifecycleOwner(this@ImeKeyboardService)
+            addView(composeView)
+        }
+
         lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-        return container!!
+        return container
     }
 
     private fun sendKeyEvent(keyCode: Int, label: String) {
@@ -84,12 +101,7 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
 
     override fun onDestroy() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
-        container?.let {
-            for (i in 0 until it.childCount) {
-                val child = it.getChildAt(i)
-                if (child is ComposeView) child.disposeComposition()
-            }
-        }
+        composeView?.disposeComposition()
         super.onDestroy()
     }
 }
