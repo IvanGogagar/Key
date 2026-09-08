@@ -238,7 +238,7 @@ fun KeyboardKey(
                 val glowRadius = size.height * 0.8f
                 val glowBrush = Brush.radialGradient(
                     colors = listOf(colors.glow, Color.Transparent),
-                    center = Offset(center.x, 0f),
+                    center = Offset(size.width / 2f, 0f),
                     radius = glowRadius
                 )
                 val cornerRadius = CornerRadius(5.dp.toPx())
