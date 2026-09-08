@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.ioskeyboard.model.KeyboardLayout
 
@@ -50,9 +51,7 @@ fun KeyboardScreen(
             .then(
                 if (Build.VERSION.SDK_INT >= S) {
                     Modifier.graphicsLayer {
-                        renderEffect = android.graphics.RenderEffect.createBlurEffect(
-                            20f, 20f, android.graphics.Shader.TileMode.CLAMP
-                        )
+                        alpha = 0.99f
                     }
                 } else {
                     Modifier

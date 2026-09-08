@@ -3,7 +3,7 @@ package com.ioskeyboard.ime
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import android.view.inputmethod.InputMethodService
+import android.inputmethodservice.InputMethodService
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.ComposeView
