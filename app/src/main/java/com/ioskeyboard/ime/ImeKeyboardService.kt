@@ -11,22 +11,29 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.ioskeyboard.model.KeyboardAction
 import com.ioskeyboard.ui.KeyboardScreen
 import com.ioskeyboard.ui.KeyboardViewModel
 import com.ioskeyboard.ui.theme.IOSStyleKeyboardTheme
 import kotlinx.coroutines.flow.collectLatest
 
-class ImeKeyboardService : InputMethodService(), LifecycleOwner {
+class ImeKeyboardService : InputMethodService(), LifecycleOwner, SavedStateRegistryOwner {
 
     private var composeView: ComposeView? = null
     private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateController by lazy { SavedStateRegistryController.create(this) }
     private val viewModel by lazy { KeyboardViewModel() }
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateController.savedStateRegistry
 
     override fun onCreate() {
         super.onCreate()
+        savedStateController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
     }
 
@@ -62,11 +69,13 @@ class ImeKeyboardService : InputMethodService(), LifecycleOwner {
                 var p: ViewParent? = parent
                 while (p is View) {
                     p.setViewTreeLifecycleOwner(this@ImeKeyboardService)
+                    p.setViewTreeSavedStateRegistryOwner(this@ImeKeyboardService)
                     p = p.parent
                 }
             }
         }.apply {
             setViewTreeLifecycleOwner(this@ImeKeyboardService)
+            setViewTreeSavedStateRegistryOwner(this@ImeKeyboardService)
             addView(composeView)
         }
 
