@@ -9,6 +9,8 @@ import com.ioskeyboard.model.LayoutProvider
 import com.ioskeyboard.model.LayoutType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class KeyboardViewModel(
@@ -38,6 +41,7 @@ class KeyboardViewModel(
 
     private var composedText = ""
     private var wordStartIndex = 0
+    private var autoRepeatJob: Job? = null
 
     val keyboardLayout: KeyboardLayout
         get() = LayoutProvider.getLayout(_currentLayout.value)
@@ -51,23 +55,35 @@ class KeyboardViewModel(
                 KeyEvent.KEYCODE_ENTER -> insertNewline()
                 KeyEvent.KEYCODE_GLOBE -> cycleLanguage()
                 KeyEvent.KEYCODE_NUMBERS -> _currentLayout.value = LayoutType.NUMBERS
-                KeyEvent.KEYCODE_ABC -> _currentLayout.value = LayoutType.ENGLISH
+                KeyEvent.KEYCODE_ABC -> {
+                    _currentLayout.value = when (_currentLayout.value) {
+                        LayoutType.NUMBERS -> LayoutType.ENGLISH
+                        LayoutType.SYMBOLS -> LayoutType.ENGLISH
+                        else -> LayoutType.ENGLISH
+                    }
+                }
                 else -> insertChar(label)
             }
         }
     }
 
-    fun onLongPress(keyCode: Int) {
-        viewModelScope.launch(ioDispatcher) {
-            if (keyCode == KeyEvent.KEYCODE_BACKSPACE) {
-                val count = composedText.length
-                if (count > 0) {
-                    composedText = ""
-                    wordStartIndex = 0
-                    _suggestions.value = emptyList()
-                    _action.emit(KeyboardAction.Delete(count))
+    fun onLongPressStart(keyCode: Int) {
+        if (keyCode == KeyEvent.KEYCODE_BACKSPACE) {
+            autoRepeatJob?.cancel()
+            autoRepeatJob = viewModelScope.launch(ioDispatcher) {
+                delay(100)
+                while (isActive) {
+                    deleteChar()
+                    delay(50)
                 }
             }
+        }
+    }
+
+    fun onLongPressEnd(keyCode: Int) {
+        if (keyCode == KeyEvent.KEYCODE_BACKSPACE) {
+            autoRepeatJob?.cancel()
+            autoRepeatJob = null
         }
     }
 
@@ -162,6 +178,7 @@ class KeyboardViewModel(
             when (current) {
                 LayoutType.ENGLISH, LayoutType.ENGLISH_SHIFTED -> LayoutType.RUSSIAN
                 LayoutType.RUSSIAN, LayoutType.RUSSIAN_SHIFTED -> LayoutType.SYMBOLS
+                LayoutType.SYMBOLS, LayoutType.NUMBERS -> LayoutType.ENGLISH
                 else -> LayoutType.ENGLISH
             }
         }

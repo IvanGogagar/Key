@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -58,13 +59,11 @@ import com.ioskeyboard.model.Key
 import com.ioskeyboard.model.KeyType
 
 private val KEY_SHAPE = RoundedCornerShape(5.dp)
-private const val KEY_HEIGHT_DP = 43
-private const val POPUP_CORNER_RADIUS_DP = 9
+private const val KEY_HEIGHT_DP = 42
+private const val POPUP_CORNER_RADIUS_DP = 8
+private const val POPUP_GAP_DP = 4
 
-private val iOSKeySpring = spring<Float>(
-    dampingRatio = 0.55f,
-    stiffness = 800f
-)
+private val iOSKeySpring = spring<Float>(dampingRatio = 0.55f, stiffness = 800f)
 
 private val popupSpring = spring<Float>(dampingRatio = 0.48f, stiffness = 1200f)
 private val popupDismissTween = tween<Float>(durationMillis = 40, easing = LinearOutSlowInEasing)
@@ -122,8 +121,8 @@ private val EnterPressed = KeyColors(
     glow = Color.White.copy(alpha = 0.12f)
 )
 private val DarkSpecialReleased = KeyColors(
-    topColor = Color(0xFF636366),
-    bottomColor = Color(0xFF4A4A4C),
+    topColor = Color(0xFF4A4A4C),
+    bottomColor = Color(0xFF3A3A3C),
     border = Color(0x26FFFFFF),
     text = Color.White,
     glow = Color.White.copy(alpha = 0.04f)
@@ -186,7 +185,8 @@ fun KeyboardKey(
     key: Key,
     isDarkTheme: Boolean,
     onKeyPress: () -> Unit,
-    onLongPress: () -> Unit,
+    onLongPressStart: () -> Unit,
+    onLongPressEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -195,6 +195,7 @@ fun KeyboardKey(
     var isPressed by remember { mutableStateOf(false) }
     var showPopup by remember { mutableStateOf(false) }
     var keySize by remember { mutableStateOf(IntSize.Zero) }
+    var keyOffsetInParent by remember { mutableStateOf(IntOffset.Zero) }
 
     val isCharacter = remember(key.type) { key.type == KeyType.CHARACTER }
 
@@ -216,7 +217,11 @@ fun KeyboardKey(
     Box(
         modifier = modifier
             .height(KEY_HEIGHT_DP.dp)
-            .onGloballyPositioned { keySize = it.size }
+            .onGloballyPositioned { coordinates ->
+                keySize = coordinates.size
+                val pos = coordinates.positionInParent()
+                keyOffsetInParent = IntOffset(pos.x.toInt(), pos.y.toInt())
+            }
             .shadow(
                 elevation = 3.dp,
                 shape = KEY_SHAPE,
@@ -252,16 +257,27 @@ fun KeyboardKey(
                     drawContent()
                 }
             }
-            .pointerInput(Unit) {
+            .pointerInput(key.code) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     isPressed = true
                     showPopup = isCharacter
                     vibrateKey(context)
 
+                    val longPressTimeoutMs = viewConfiguration.longPressTimeoutMillis
+                    var isLongPress = false
                     var up = false
+                    val downTime = System.currentTimeMillis()
+
                     while (!up) {
                         val event = awaitPointerEvent()
+                        val elapsed = System.currentTimeMillis() - downTime
+
+                        if (!isLongPress && elapsed >= longPressTimeoutMs) {
+                            isLongPress = true
+                            if (!isCharacter) onLongPressStart()
+                        }
+
                         for (change in event.changes) {
                             if (!change.pressed) {
                                 up = true
@@ -272,7 +288,12 @@ fun KeyboardKey(
 
                     isPressed = false
                     showPopup = false
-                    if (isCharacter) onKeyPress() else onLongPress()
+
+                    if (isLongPress) {
+                        onLongPressEnd()
+                    } else {
+                        onKeyPress()
+                    }
                 }
             },
         contentAlignment = Alignment.Center
@@ -280,8 +301,8 @@ fun KeyboardKey(
         Text(
             text = key.label,
             color = colors.text,
-            fontSize = if (isCharacter) 22.sp else 15.sp,
-            fontWeight = if (isCharacter) FontWeight.Light else FontWeight.Medium
+            fontSize = if (isCharacter) 22.sp else 14.sp,
+            fontWeight = if (isCharacter) FontWeight.Normal else FontWeight.Medium
         )
     }
 
@@ -290,7 +311,8 @@ fun KeyboardKey(
         isDark = isDarkTheme,
         visible = showPopup && isPressed,
         keyWidthPx = keySize.width,
-        keyHeightPx = keySize.height
+        keyHeightPx = keySize.height,
+        keyOffsetX = keyOffsetInParent.x
     )
 }
 
@@ -300,7 +322,8 @@ private fun KeyPopupPreview(
     isDark: Boolean,
     visible: Boolean,
     keyWidthPx: Int,
-    keyHeightPx: Int
+    keyHeightPx: Int,
+    keyOffsetX: Int
 ) {
     val density = LocalDensity.current
     val cornerRadiusPx = with(density) { POPUP_CORNER_RADIUS_DP.dp.toPx() }
@@ -320,15 +343,6 @@ private fun KeyPopupPreview(
         animationSpec = if (visible) popupAlphaEnterTween else popupDismissTween,
         label = "popupAlpha"
     )
-    val animTranslationY by animateFloatAsState(
-        targetValue = if (visible) {
-            with(density) { -(keyHeightPx + 10.dp.roundToPx()).toFloat() }
-        } else {
-            with(density) { 20.dp.toPx() }
-        },
-        animationSpec = if (visible) popupSpring else popupDismissTween,
-        label = "popupTranslationY"
-    )
 
     val w = if (keyWidthPx > 0) keyWidthPx.toFloat() else with(density) { 40.dp.toPx() }
     val h = if (keyHeightPx > 0) keyHeightPx.toFloat() else with(density) { KEY_HEIGHT_DP.dp.toPx() }
@@ -338,6 +352,13 @@ private fun KeyPopupPreview(
     val stemW = w
     val stemH = h * 0.3f
     val totalH = bubbleH + stemH
+
+    val popupWidthPx = bubbleW.toInt()
+    val popupHeightPx = totalH.toInt()
+    val gapPx = with(density) { POPUP_GAP_DP.dp.toPx() }
+
+    val popupOffsetX = keyOffsetX + keyWidthPx / 2 - popupWidthPx / 2
+    val popupOffsetY = -(popupHeightPx + gapPx.toInt())
 
     val popupPath = remember(bubbleW, bubbleH, stemW, stemH, cornerRadiusPx) {
         buildPopupPath(bubbleW, bubbleH, stemW, stemH, cornerRadiusPx)
@@ -370,8 +391,8 @@ private fun KeyPopupPreview(
     }
 
     Popup(
-        alignment = Alignment.TopCenter,
-        offset = IntOffset(0, animTranslationY.toInt()),
+        alignment = Alignment.TopStart,
+        offset = IntOffset(popupOffsetX, popupOffsetY),
         properties = PopupProperties(focusable = false, clippingEnabled = false)
     ) {
         Box(
@@ -379,7 +400,7 @@ private fun KeyPopupPreview(
                 .size(with(density) { bubbleW.toDp() }, with(density) { totalH.toDp() })
                 .scale(scaleX, scaleY)
                 .alpha(animAlpha)
-                .shadow(12.dp, popupShape, spotColor = Color.Black.copy(alpha = 0.35f))
+                .shadow(8.dp, popupShape, spotColor = Color.Black.copy(alpha = 0.35f))
                 .drawBehind {
                     drawPath(path = popupPath, brush = popupBgBrush)
                     drawPath(path = popupPath, color = borderColor, style = popupStroke)

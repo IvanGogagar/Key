@@ -50,12 +50,12 @@ import com.ioskeyboard.model.LayoutType
 private const val KEYBOARD_HEIGHT_RATIO = 0.34f
 private const val MIN_KEYBOARD_HEIGHT_DP = 260
 private const val MAX_KEYBOARD_HEIGHT_DP = 320
-private const val ROW_SPACING_DP = 7
+private const val ROW_SPACING_DP = 5
 private const val KEY_SPACING_DP = 5
 private const val BOTTOM_ROW_PADDING_DP = 2
 private const val CORNER_RADIUS_DP = 14
 private const val HORIZONTAL_PADDING_DP = 3
-private const val VERTICAL_PADDING_DP = 6
+private const val VERTICAL_PADDING_DP = 2
 
 private val LightGradientStops = arrayOf(
     0.00f to Color(0xFFE3E5EB),
@@ -96,7 +96,8 @@ fun KeyboardScreen(
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
     val onKeyPress = rememberUpdatedState(viewModel::onKeyPress)
-    val onLongPress = rememberUpdatedState(viewModel::onLongPress)
+    val onLongPressStart = rememberUpdatedState(viewModel::onLongPressStart)
+    val onLongPressEnd = rememberUpdatedState(viewModel::onLongPressEnd)
     val onSuggestionSelected = rememberUpdatedState(viewModel::onSuggestionSelected)
 
     val config = LocalConfiguration.current
@@ -124,7 +125,6 @@ fun KeyboardScreen(
             )
             .clip(keyboardShape)
     ) {
-        // Слой 1: Фон — градиент, полоски, blur
         Spacer(
             modifier = Modifier
                 .matchParentSize()
@@ -185,7 +185,6 @@ fun KeyboardScreen(
                 }
         )
 
-        // Слой 2: Контент — чёткие клавиши и подсказки
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -254,7 +253,8 @@ fun KeyboardScreen(
                                     key = key,
                                     isDarkTheme = isDarkTheme,
                                     onKeyPress = { onKeyPress.value(key.code, key.label) },
-                                    onLongPress = { onLongPress.value(key.code) },
+                                    onLongPressStart = { onLongPressStart.value(key.code) },
+                                    onLongPressEnd = { onLongPressEnd.value(key.code) },
                                     modifier = Modifier.weight(key.widthWeight)
                                 )
                             }
