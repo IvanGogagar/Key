@@ -36,20 +36,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.GenericShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
@@ -224,7 +224,7 @@ fun KeyboardKey(
                 spotColor = if (isDarkTheme) Color.Black.copy(alpha = 0.60f) else Color.Black.copy(alpha = 0.18f)
             )
             .scale(scale)
-            .offset(IntOffset(0, translationY.toInt()))
+            .offset { IntOffset(0, translationY.toInt()) }
             .clip(KEY_SHAPE)
             .background(
                 brush = Brush.verticalGradient(
@@ -344,7 +344,13 @@ private fun KeyPopupPreview(
     }
 
     val popupShape = remember(popupPath) {
-        GenericShape { _, _ -> addPath(popupPath) }
+        object : Shape {
+            override fun createOutline(
+                size: Size,
+                layoutDirection: LayoutDirection,
+                density: Density
+            ): Outline = Outline.Generic(popupPath)
+        }
     }
 
     val bgColor = remember(isDark) { if (isDark) Color(0xFF5A5A5E) else Color.White }
